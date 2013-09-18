@@ -1,0 +1,23 @@
+#!/bin/bash
+
+EXTRA_ARGS=""
+if [ "$MESOS_HOME" != "" ]; then
+  EXTRA_ARGS="-Djava.library.path=$MESOS_HOME/lib/java"
+fi
+
+if [ "x$SPARK_HOME" == "x" ] ; then
+    echo "No SPARK_HOME specified - please set it."
+    exit 1
+else
+    echo "Launching sbt with SPARK_HOME set to "$SPARK_HOME
+fi
+
+if [ "x$EXPRESS_D_HOME" == "x" ] ; then
+    export EXPRESS_D_HOME=$(cd "$(dirname $0)/.."; pwd)
+    echo "No EXPRESS_D_HOME specified. Defaulting to "$EXPRESS_D_HOME
+else
+    echo "Launching sbt with EXPRESS_D_HOME set to "$EXPRESS_D_HOME
+fi
+
+java -Xmx1200M -XX:MaxPermSize=200m $EXTRA_ARGS -jar ${EXPRESS_D_HOME}/sbt/sbt-launch-0.11.3-2.jar "$@"
+

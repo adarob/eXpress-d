@@ -1,0 +1,207 @@
+#!/usr/bin/env python
+
+import argparse
+import itertools
+from math import sqrt
+import os.path
+import re
+from subprocess import Popen, PIPE
+import sys
+import threading
+import time
+
+# TODO(harvey): This file is kind of lame, since it's the same as 'bin/build-and-run', except with
+#               'should_prep_spark' and 'should_prep_express_d' both set to false.
+#               Erase the parts that aren't needed for Express-D runs.
+
+# --------------------------------------------------------------------------------------------------
+# NOTE: This script is a modified (and heavily simplified) version of the 'bin/run' script from
+#       'https://github.com/amplab/spark-perf'.
+# --------------------------------------------------------------------------------------------------
+
+# The express-D project directory
+proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sbt_cmd = "sbt/sbt"
+
+parser = parser = argparse.ArgumentParser(description='Run Express-D. Before running, '
+    'edit the configuration file in express-D/config.')
+
+parser.add_argument('--config-file', help='override default location of config file, must be a '
+    'python file that ends in .py', default="%s/config/config.py" % proj_dir)
+
+args = parser.parse_args()
+assert args.config_file.endswith(".py"), "config filename must end with .py"
+
+# Check if the config file exists.
+assert os.path.isfile(args.config_file), ("Please create a config file called %s (you probably "
+    "just want to copy and then modify %s/config/config.py.template)" % 
+    (args.config_file, proj_dir))
+
+print "Detected project directory: %s" % proj_dir
+# Import the configuration settings from the config file.
+print("Adding %s to sys.path" % os.path.dirname(args.config_file))
+sys.path.append(os.path.dirname(args.config_file))
+print("running 'import %s'" % os.path.basename(args.config_file).split(".")[0])
+exec("import %s" % os.path.basename(args.config_file).split(".")[0])
+
+# Setup environment variables.
+os.environ["SPARK_HOME"] = config.SPARK_HOME
+os.environ["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
+
+# Determine what to build based on user-specified variables.
+should_prep_spark = false
+should_prep_express_d = false
+
+# Run shell command and ignore output.
+def run_cmd(cmd, exit_on_fail=True):
+    if cmd.find(";") != -1:
+        print("***************************")
+        print("WARNING: the following command contains a semicolon which may cause non-zero return "
+            "values to be ignored. This isn't necessarily a problem, but proceed with caution!")
+    print(cmd)
+    return_code = Popen(cmd, stdout=sys.stderr, shell=True).wait()
+    if exit_on_fail:
+        if return_code != 0:
+            print "The following shell command finished with a non-zero returncode (%s): %s" % (
+                return_code, cmd)
+            sys.exit(-1)
+    return return_code
+
+# Run several commands in parallel, waiting for them all to finish.
+# Expects an array of tuples, where each tuple consists of (command_name, exit_on_fail).
+def run_cmds_parallel(commands):
+    threads = []
+    for (cmd_name, exit_on_fail) in commands:
+        thread = threading.Thread(target=run_cmd, args=(cmd_name, exit_on_fail))
+        thread.start()
+        threads = threads + [thread]
+    for thread in threads:
+        thread.join()
+
+# Return a command running cmd_name on host with proper SSH configs.
+def make_ssh_cmd(cmd_name, host):
+    return "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 %s '%s'" % (host, cmd_name)
+
+# Return a command which copies the supplied directory to the given host.
+def make_rsync_cmd(dir_name, host):
+    return ('rsync --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5" -az "%s/" '
+        '"%s:%s"') % (dir_name, host, os.path.abspath(dir_name))
+
+# Delete all files in the given directory on the specified hosts.
+def clear_dir(dir_name, hosts):
+    assert dir_name != "" and dir_name != "/", ("Attempted to delete directory '%s/*', halting "
+        "rather than deleting entire file system.") % dir_name
+    if config.PROMPT_FOR_DELETES:
+        response = raw_input("\nAbout to remove all files and directories under %s on %s, is "
+            "this ok? [y, n] " % (dir_name, hosts))
+        if response != "y":
+            return
+    run_cmds_parallel([(make_ssh_cmd("rm -r %s/*" % dir_name, host), False) for host in hosts])
+
+# Ensures that no executors are running on Spark slaves. Executors can continue to run for some
+# time after a shutdown signal is given due to cleaning up temporary files.
+def ensure_spark_stopped_on_slaves(slaves):
+    stop = False
+    while not stop:
+        cmd = "ps -ef |grep -v grep |grep ExecutorBackend"
+        ret_vals = map(lambda s: run_cmd(make_ssh_cmd(cmd, s), False), slaves)
+        if 0 in ret_vals:
+            print "Spark is still running on some slaves ... sleeping for 10 seconds"
+            time.sleep(10)
+        else:
+            stop = True
+
+# Get a list of slaves by parsing the slaves file in SPARK_CONF_DIR.
+slaves_file_raw = open("%s/slaves" % config.SPARK_CONF_DIR, 'r').read().split("\n")
+slaves_list = filter(lambda x: not x.startswith("#") and not x is "", slaves_file_raw)
+
+# If a cluster is already running from the Spark EC2 scripts, try shutting it down.
+if os.path.exists("%s/bin/stop-all.sh" % config.SPARK_HOME_DIR):
+    run_cmd("%s/bin/stop-all.sh" % config.SPARK_HOME_DIR)
+
+# If a cluster is already running from an earlier test, try shutting it down.
+if os.path.exists("%s/spark/bin/stop-all.sh" % proj_dir):
+    print("Stopping Spark standalone cluster...")
+    run_cmd("%s/spark/bin/stop-all.sh" % proj_dir)
+
+# Ensure all shutdowns have completed (no executors are running).
+ensure_spark_stopped_on_slaves(slaves_list)
+# Allow some extra time for slaves to fully terminate.
+time.sleep(5)
+
+# Prepare Spark.
+if should_prep_spark:
+    # Assumes that the preexisting 'spark' directory is valid.
+    if not os.path.isdir("spark"):
+        # Clone Spark.
+        print("Git cloning Spark...")
+        run_cmd("git clone %s spark" % config.SPARK_GIT_REPO)
+
+    # Package the fetched Spark source.
+    run_cmd("%s clean package" % sbt_cmd)
+
+    # Copy Spark configuration files to new directory.
+    print("Copying all files from %s to %s/spark/conf/" % (config.SPARK_CONF_DIR, proj_dir))
+    assert os.path.exists("%s/spark-env.sh" % config.SPARK_CONF_DIR), \
+        "Could not find required file %s/spark-env.sh" % config.SPARK_CONF_DIR
+    assert os.path.exists("%s/slaves" % config.SPARK_CONF_DIR), \
+        "Could not find required file %s/slaves" % config.SPARK_CONF_DIR
+    run_cmd("cp %s/* %s/spark/conf/" % (config.SPARK_CONF_DIR, proj_dir))
+
+    # Change back to 'proj_dir' directory.
+    os.chdir("..")
+else:
+    # TODO(andy): Make this check for the jar we will be including on the
+    #             classpath (as part of work Patrick is doing), instead of
+    #             just looking for spark/target.
+    assert os.path.exists(
+        "%s/spark/target" % proj_dir), ("You chose to skip Spark prep, but we can't since " +
+        "%s/spark/target does not exist, so Spark needs to be rebuilt/packaged." % proj_dir)
+    print("Skipping preparation tasks for Spark (i.e, git clone or update, checkout, build, " +
+        "copy conf files).")
+
+# There is a Spark jar at this point. Build Express-D, if needed.
+spark_work_dir = "%s/spark/work" % proj_dir
+if os.path.exists(spark_work_dir):
+    # Clear the 'perf-tests/spark/work' directory beforehand, since that may contain scheduler logs
+    # from previous jobs. The directory could also contain a spark-perf-tests-assembly.jar that may
+    # interfere with subsequent 'sbt assembly' for Spark perf.
+    clear_dir(spark_work_dir, ["localhost"])
+
+if should_prep_express_d:
+    # Make sure we're in the right directory.
+    run_cmd("cd %s" % proj_dir)
+    run_cmd("%s clean assembly" % sbt_cmd)
+else:
+    express_d_jar_path = "%s/target/express-d-assembly.jar" % proj_dir
+    assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
+        "source, but %s cannot be found") % express_d_jar_path
+
+# Sync the whole directory to slaves.
+print("Syncing the test directory to the slaves.")
+run_cmds_parallel([(make_rsync_cmd(proj_dir, slave), True) for slave in slaves_list])
+
+# Set Spark Java Options (from config.py)
+new_env = os.environ.copy()
+
+new_env["SPARK_HOME"] = config.SPARK_HOME
+new_env["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
+
+# Search for the 'spark.local.dir' property in SPARK_HOME/spark-env.sh.
+path_to_spark_env_file = "%s/spark-env.sh" % config.SPARK_CONF_DIR
+spark_local_directories = ""
+
+env_file_content = open(path_to_env_file, 'r').read()
+re_result = re.search(r'spark.local.dir=([^"]*)"', env_file_content)
+if re_result:
+    spark_local_dirs = re_result.group(1).split(",")
+else:
+    sys.exit("ERROR: These scripts require you to explicitly set spark.local.dir in spark-env.sh "
+        "so that it can be cleaned. The way we check this is pretty picky, specifically, we try to "
+        "find the following string in spark-env.sh: spark.local.dir=ONE_OR_MORE_DIRNAMES\" so you "
+        "will want a line like this: SPARK_JAVA_OPTS+=\" -Dspark.local.dir=/tmp\"")
+
+scala_cmd_classpath = "%s/target/express-d-assembly.jar" % proj_dir
+run_express(scala_cmd_classpath)
+
+print("Finished running Express-D")
