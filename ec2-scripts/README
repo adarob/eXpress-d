@@ -1,6 +1,6 @@
-This folder contains a script, spark-ec2, for launching Spark clusters on
+Cloned from github.com/mesos/spark/ec2, this folder contains a script, spark-ec2, for launching Spark clusters on
 Amazon EC2. Usage instructions are available online at:
 http://spark-project.org/docs/latest/ec2-scripts.html
 
 
-To launch a cluster preloaded with Express-Spark run with the --ami option set to xxxxx
+To launch a cluster that is preloaded with Spark, HDFS, and eXpress-D, run with the --ami option set to ami-0b6d2662.
