@@ -1,6 +1,4 @@
-# eXpress-D
-
-![eXpress-D](http://bio.math.berkeley.edu/eXpress/img/logo_d.png)
+# eXpress-D ![eXpress-D](http://bio.math.berkeley.edu/eXpress/img/logo_d.png)
 
 Distributed ambiguous fragment assignment using [eXpress](http://bio.math.berkeley.edu/eXpress) and [Spark](http://spark.incubator.apache.org/).
 
