@@ -1,20 +1,22 @@
 package expressd
 
+import java.io.File
+
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.Traversable
+import scala.collection.mutable.ArrayBuffer
 
 import joptsimple.{OptionSet, OptionParser}
 
 import spark.{Accumulable, AccumulableParam}
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.{RDD, SparkContext, SparkEnv}
-import spark.storage._
-
 import spark.SparkContext
 import spark.SparkContext._
-
+import spark.SparkEnv
+import spark.RDD
 import spark.SparkMemoryUtilities
+import spark.broadcast.{HttpBroadcast, Broadcast}
+import spark.storage._
+
 
 object ExpressRunner {
 
@@ -35,6 +37,15 @@ object ExpressRunner {
   val parser = new OptionParser()
   var optionSet: OptionSet = _
 
+  intOptions.map { case (opt, desc) =>
+    parser.accepts(opt, desc).withOptionalArg().ofType(classOf[Int])
+  }
+  stringOptions.map { case (opt, desc) =>
+    parser.accepts(opt, desc).withRequiredArg().ofType(classOf[String]).required()
+  }
+  booleanOptions.map { case (opt, desc) =>
+    parser.accepts(opt, desc).withOptionalArg().ofType(classOf[Boolean])
+  }
 
   def main(args: Array[String]) {
 
@@ -42,6 +53,7 @@ object ExpressRunner {
 
     val hitsFilePath = optionSet.valueOf(HITS_FILE_PATH._1).asInstanceOf[String]
     val targetsFilePath = optionSet.valueOf(TARGETS_FILE_PATH._1).asInstanceOf[String]
+
     var shouldUseBias = optionSet.valueOf(SHOULD_USE_BIAS._1).asInstanceOf[Boolean]
     var numIterations = optionSet.valueOf(NUM_ITERATIONS._1).asInstanceOf[Int]
     val shouldCache = optionSet.valueOf(SHOULD_CACHE._1).asInstanceOf[Boolean]
@@ -57,6 +69,11 @@ object ExpressRunner {
 
     // Start processing
     val isLocal = host.toLowerCase.equals("local")
+    // For local test runs, make sure that `hitsFilePath` and `targetsFilePath` are defined.
+    require(isLocal && (new File(hitsFilePath)).exists,
+      "Invalid hits-file-path: " + hitsFilePath)
+    require(isLocal && (new File(targetsFilePath).exists),
+      "Invalid targets-file-path: " + targetsFilePath)
 
     val sc = new SparkContext(host, "express-" + host)
 
@@ -64,7 +81,7 @@ object ExpressRunner {
     // (Scala's static variabels are lazily initialized).
     ExpressEnv.initWithSparkContext(sc)
 
-    println("started preprocessing")
+    println("Started preprocessing")
 
     val preProcessingTime = System.currentTimeMillis()
 
@@ -98,7 +115,6 @@ object ExpressRunner {
 
     var sortedTargets = targetsBuffer.toArray.sortWith((x, y) => x.id < y.id)
 
-
     // Preprocessing
     var bcTargSeqs: Broadcast[Array[Array[Byte]]] = sc.broadcast(sortedTargets.map(target => target.seq))
     var bcTargLens: Broadcast[Array[Int]] = sc.broadcast(sortedTargets.map(target => target.length))
@@ -131,13 +147,14 @@ object ExpressRunner {
 
     val parseTime = System.currentTimeMillis()
 
-    val outputRDD = ExpressD.runExpress(bcTargSeqs,
-                                        bcTargLens,
-                                        sortedTargets,
-                                        fragmentsRDD,
-                                        numIterations,
-                                        shouldUseBias,
-                                        isLocal)
+    val outputRDD = ExpressD.runExpress(
+      bcTargSeqs,
+      bcTargLens,
+      sortedTargets,
+      fragmentsRDD,
+      numIterations,
+      shouldUseBias,
+      isLocal)
 
     val iterTime = System.currentTimeMillis()
 

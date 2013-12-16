@@ -71,9 +71,9 @@ SPARK_RUNTIME_OPTS = [
 
 # Global options specific to Express-D.
 EXPRESS_RUNTIME_OPTS = [
-    JavaOptionSet("express.persist.serialize", "false"),
-    JavaOptionSet("express.outputInterval", 5000),
-    JavaOptionSet("express.targetParallelism", 20),
+    JavaOptionSet("express.persist.serialize", ["false"]),
+    JavaOptionSet("express.outputInterval", [5000]),
+    JavaOptionSet("express.targetParallelism", [20]),
 ]
 
 ALL_JAVA_OPTS = SPARK_RUNTIME_OPTS + EXPRESS_RUNTIME_OPTS
@@ -90,4 +90,5 @@ EXPRESS_RUNTIME_LOCAL_OPTS = [
     OptionSet("debug-output", ["false"]),
 ]
 
-EXPRESS_RUN = [("Express-D", "expressd.ExpressRunner", ALL_JAVA_OPTS, EXPRESS_RUNTIME_LOCAL_OPTS)]
+# A tuple of (short_name, test_cmd, scale_factor, java_opt_sets, opt_sets)
+EXPRESS_RUN = [("Express-D", "expressd.ExpressRunner", 1.0, ALL_JAVA_OPTS, EXPRESS_RUNTIME_LOCAL_OPTS)]
