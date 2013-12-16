@@ -1,0 +1,11 @@
+project/boot/
+project/build/target
+target/
+build/
+config/config.py
+config/*.pyc
+*.class
+*.log
+*.swp
+*.DS_STORE
+express-D-*
