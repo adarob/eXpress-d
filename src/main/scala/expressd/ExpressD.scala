@@ -19,6 +19,7 @@ import expressd.protobuf._
 import spark.SparkMemoryUtilities
 
 import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.AccumulatorParam
 import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkContext, SparkEnv}
@@ -1068,7 +1069,13 @@ object ExpressD {
 
       // ===== Debugging =====
       // Print out some memory usage info.
-      var accumFragmentsSize = sc.accumulable(0.0)
+      //var lap = new LongAccumulatorParam()
+      //var accumulatorName = "FragmentsSizeAccumulator"
+      //var accumulatorInit = 0L
+      //LongAccumulatorParam()
+      //var accumFragmentsSize = sc.accumulable(0L, "afs", lap)
+      //var accumFragmentsSize = sc.accumulator(accumulatorInit, accumulatorName, lap)
+      var accumFragmentsSize = sc.accumulable(0L)(org.apache.spark.SparkContext.LongAccumulatorParam)
 
       if (true) {
         processedRDD.mapPartitions{ partition =>
