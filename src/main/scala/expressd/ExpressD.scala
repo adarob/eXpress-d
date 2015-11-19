@@ -20,7 +20,7 @@ import spark.SparkMemoryUtilities
 
 import org.apache.spark.{Accumulable, AccumulableParam}
 import org.apache.spark.AccumulatorParam
-import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkContext, SparkEnv}
 import org.apache.spark.storage._
