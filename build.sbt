@@ -21,8 +21,6 @@ unmanagedJars in Compile <++= baseDirectory map { base =>
   finder.get
 }
 
-assemblySettings
-
 test in assembly := {}
 
 jarName in assembly := "express-D-assembly.jar"
