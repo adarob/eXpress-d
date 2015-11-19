@@ -1,7 +1,7 @@
 package spark
 
 import org.apache.spark.SparkEnv
-import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.util.SizeEstimator
 
 object SparkMemoryUtilities {
@@ -11,9 +11,11 @@ object SparkMemoryUtilities {
    * local Spark process.
    */
   def dropBroadcastVar(bcVar: Broadcast[_]) {
-    val blockManager = SparkEnv.get.blockManager
-    val broadcastBlockId = bcVar.asInstanceOf[HttpBroadcast[_]].blockId
-    blockManager.removeBlock(broadcastBlockId)
+    bcVar.unpersist()
+
+    //val blockManager = SparkEnv.get.blockManager
+    //val broadcastBlockId = bcVar.asInstanceOf[HttpBroadcast[_]].blockId
+    //blockManager.removeBlock(broadcastBlockId)
   }
 
   def estimateSize(obj: AnyRef): Long = {
