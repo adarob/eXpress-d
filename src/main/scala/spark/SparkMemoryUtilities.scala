@@ -1,6 +1,7 @@
 package spark
 
-import spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.SparkEnv
+import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
 
 object SparkMemoryUtilities {
 

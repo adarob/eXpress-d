@@ -18,13 +18,14 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import expressd.protobuf._
 import spark.SparkMemoryUtilities
 
-import spark.{Accumulable, AccumulableParam}
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.{RDD, SparkContext, SparkEnv}
-import spark.storage._
+import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, SparkEnv}
+import org.apache.spark.storage._
 
-import spark.SparkContext
-import spark.SparkContext._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
 
 // For debugging.
 import scala.runtime.ScalaRunTime._
