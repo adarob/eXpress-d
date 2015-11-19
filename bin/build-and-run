@@ -164,7 +164,7 @@ else:
     assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
         "source, but %s cannot be found") % express_d_jar_path
 
-assert 0 == 1
+#assert 0 == 1
 
 # Sync the whole directory to slaves.
 print("Syncing the test directory to the slaves.")
