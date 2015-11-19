@@ -2,6 +2,7 @@ package spark
 
 import org.apache.spark.SparkEnv
 import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.util.SizeEstimator
 
 object SparkMemoryUtilities {
 
