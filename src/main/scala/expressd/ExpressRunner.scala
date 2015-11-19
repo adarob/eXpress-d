@@ -8,14 +8,14 @@ import scala.collection.mutable.ArrayBuffer
 
 import joptsimple.{OptionSet, OptionParser}
 
-import spark.{Accumulable, AccumulableParam}
-import spark.SparkContext
-import spark.SparkContext._
-import spark.SparkEnv
-import spark.RDD
+import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkEnv
+import org.apache.spark.rdd.RDD
 import spark.SparkMemoryUtilities
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.storage._
+import org.apache.spark.broadcast.{HttpBroadcast, Broadcast}
+import org.apache.spark.storage._
 
 
 object ExpressRunner {
