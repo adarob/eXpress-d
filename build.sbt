@@ -1,12 +1,8 @@
-import AssemblyKeys._
-
 name := "express-D"
 
 version := "0.1"
 
 organization := "math.mcb.berkeley.edu"
-
-scalaVersion := "2.9.3"
 
 libraryDependencies += "org.clapper" % "argot_2.9.2" % "0.4"
 
