@@ -49,8 +49,8 @@ os.environ["SPARK_HOME"] = config.SPARK_HOME
 os.environ["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
 
 # Determine what to build based on user-specified variables.
-should_prep_spark = false
-should_prep_express_d = false
+should_prep_spark = False
+should_prep_express_d = False
 
 # Run shell command and ignore output.
 def run_cmd(cmd, exit_on_fail=True):
