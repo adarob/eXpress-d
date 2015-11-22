@@ -160,7 +160,7 @@ if should_prep_express_d:
     run_cmd("%s clean assembly" % sbt_cmd)
     print("Done assembling Express-D jar.")
 else:
-    express_d_jar_path = "%s/target/express-d-assembly.jar" % proj_dir
+    express_d_jar_path = "%s/target/scala-2.10/express-d-assembly.jar" % proj_dir
     assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
         "source, but %s cannot be found") % express_d_jar_path
 
@@ -176,7 +176,7 @@ new_env = os.environ.copy()
 new_env["SPARK_HOME"] = config.SPARK_HOME
 new_env["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
 
-scala_cmd_classpath = "%s/target/express-d-assembly.jar" % proj_dir
+scala_cmd_classpath = "%s/target/scala-2.10/express-d-assembly.jar" % proj_dir
 
 # Run all tests specified in 'tests_to_run', a list of 5-element tuples. See the 'Test Setup'
 # section in config.py.template for more info.
