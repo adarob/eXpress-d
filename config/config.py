@@ -80,7 +80,7 @@ ALL_JAVA_OPTS = SPARK_RUNTIME_OPTS + EXPRESS_RUNTIME_OPTS
 
 # Options local to each Express-D run.
 EXPRESS_RUNTIME_LOCAL_OPTS = [
-    OptionSet("hits-file-path", ["/mapr/MapR_EMR.amazonaws.com/data/eXpress/x.eXpressD"]),
+    OptionSet("hits-file-path", ["/mapr/MapR_EMR.amazonaws.com/data/eXpress/hits.pb"]),
     OptionSet("targets-file-path", ["/mapr/MapR_EMR.amazonaws.com/data/eXpress/targets.pb"]),
     OptionSet("should-use-bias", ["true"]),
     OptionSet("num-iterations", ["1000"]),
