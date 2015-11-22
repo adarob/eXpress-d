@@ -175,7 +175,7 @@ if should_prep_express_d:
     run_cmd("cd %s" % proj_dir)
     run_cmd("%s clean assembly" % sbt_cmd)
 else:
-    express_d_jar_path = "%s/target/scala-2.10/express-d-assembly.jar" % proj_dir
+    express_d_jar_path = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
     assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
         "source, but %s cannot be found") % express_d_jar_path
 
@@ -203,7 +203,7 @@ else:
         "find the following string in spark-env.sh: spark.local.dir=ONE_OR_MORE_DIRNAMES\" so you "
         "will want a line like this: SPARK_JAVA_OPTS+=\" -Dspark.local.dir=/tmp\"")
 
-scala_cmd_classpath = "%s/target/scala-2.10/express-d-assembly.jar" % proj_dir
+scala_cmd_classpath = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
 run_express(scala_cmd_classpath)
 
 print("Finished running Express-D")
