@@ -21,7 +21,7 @@ import time
 
 # The express-D project directory
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sbt_cmd = "sbt/sbt"
+sbt_cmd = "/usr/bin/sbt"
 
 parser = parser = argparse.ArgumentParser(description='Run Express-D. Before running, '
     'edit the configuration file in express-D/config.')

@@ -64,7 +64,7 @@ SPARK_CLUSTER_URL = "local"
 SPARK_RUNTIME_OPTS = [
     # Fraction of JVM memory used for caching RDDs.
     JavaOptionSet("spark.storage.memoryFraction", [0.66]),
-    JavaOptionSet("spark.serializer", ["spark.JavaSerializer"]),
+    JavaOptionSet("spark.serializer", ["org.apache.spark.serializer.JavaSerializer"]),
     # How much memory to give the Spark process running on each slave.
     JavaOptionSet("spark.executor.memory", ["4g"]),
 ]
@@ -80,8 +80,8 @@ ALL_JAVA_OPTS = SPARK_RUNTIME_OPTS + EXPRESS_RUNTIME_OPTS
 
 # Options local to each Express-D run.
 EXPRESS_RUNTIME_LOCAL_OPTS = [
-    OptionSet("hits-file-path", [""]),
-    OptionSet("targets-file-path", [""]),
+    OptionSet("hits-file-path", ["/mapr/MapR_EMR.amazonaws.com/data/eXpress/x.eXpressD"]),
+    OptionSet("targets-file-path", ["/mapr/MapR_EMR.amazonaws.com/data/eXpress/targets.pb"]),
     OptionSet("should-use-bias", ["true"]),
     OptionSet("num-iterations", ["1000"]),
     OptionSet("should-cache", ["true"]),
