@@ -881,7 +881,14 @@ object ExpressD {
           val left = fragment._3
           val right = fragment._4
 
+
           for (i <- 0 until numAlignments) {
+            //if ( left._1(i) > right._1(i) ) {
+            //  val t = left
+            //  left = right
+            //  right = t
+            //}
+
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
             val leftStart = left._1(i)
@@ -895,9 +902,17 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            //val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
+
+            //println("pairLength=" + pairLength + " pairTargetId=" + pairTargetId)
+            val bcTausValue = bcTaus.value(pairTargetId)
+            val bcFldValue = bcFld.value(pairLength)
+            val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
+
             likelihoods.set(i,
-              bcTaus.value(pairTargetId) + bcFld.value(pairLength) - bcEffLengths.value(pairTargetId))
+              bcTausValue + bcFldValue - bcEffLengthsValue
+            )
 
             val targSeq = bcTargSeqs.value(pairTargetId)
             val targLen = bcTargLens.value(pairTargetId)
@@ -922,8 +937,8 @@ object ExpressD {
             }
 
             if (shouldUpdateAllParams) {
-              errorIndices1.add(if (errorIndex1 == null) { errorIndices1.get(0) } else { errorIndex1 })
-              errorIndices2.add(if (errorIndex2 == null) { errorIndices2.get(0) } else { errorIndex2 })
+              errorIndices1.add(if (errorIndex1 == null) { if (errorIndices1.size > 0) { errorIndices1.get(0) } else { errorIndex1 } } else { errorIndex1 })
+              errorIndices2.add(if (errorIndex2 == null) { if (errorIndices2.size > 0) { errorIndices2.get(0) } else { errorIndex2 } } else { errorIndex2 })
             }
 
             // Sum current likelihood with values in errors likelihood table at MAX_READ_LENGTH indices.
