@@ -945,6 +945,8 @@ object ExpressD {
             var errLikelihood1 = LOG_1
             if (i > 0 && errorIndex1 == null) {
               errLikelihood1 = refErrLikelihood1
+            } else if ( errorIndex1 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex1.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex1(j))
@@ -957,6 +959,8 @@ object ExpressD {
             var errLikelihood2 = LOG_1
             if (i > 0 && errorIndex2 == null) {
               errLikelihood2 = refErrLikelihood2
+            } else if ( errorIndex2 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex2.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex2(j))
@@ -1049,13 +1053,17 @@ object ExpressD {
               val errorIndex2 = errorIndices2.get(i)
 
               newFld.localValue(pairLength) += p
-              for (j <- 0 until errorIndex1.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex1(j))
-                newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex1 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex1.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex1(j))
+                  newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
-              for (j <- 0 until errorIndex2.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex2(j))
-                newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex2 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex2.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex2(j))
+                  newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
 
               if (shouldUseBias) {
