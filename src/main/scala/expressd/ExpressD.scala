@@ -1041,7 +1041,8 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            //val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
 
             // Correct for numerical issues
             val p = likelihoods.get(i) / newTotLikelihood
