@@ -895,7 +895,12 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
+
+            val bcTausValue = bcTaus.value(pairTargetId)
+            val bcFldValue = bcFld.value(pairLength)
+            val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
+
             likelihoods.set(i,
               bcTaus.value(pairTargetId) + bcFld.value(pairLength) - bcEffLengths.value(pairTargetId))
 
@@ -1022,7 +1027,7 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
 
             // Correct for numerical issues
             val p = likelihoods.get(i) / newTotLikelihood
