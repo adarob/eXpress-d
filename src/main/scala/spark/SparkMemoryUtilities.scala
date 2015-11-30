@@ -12,10 +12,6 @@ object SparkMemoryUtilities {
    */
   def dropBroadcastVar(bcVar: Broadcast[_]) {
     bcVar.unpersist()
-
-    //val blockManager = SparkEnv.get.blockManager
-    //val broadcastBlockId = bcVar.asInstanceOf[HttpBroadcast[_]].blockId
-    //blockManager.removeBlock(broadcastBlockId)
   }
 
   def estimateSize(obj: AnyRef): Long = {
