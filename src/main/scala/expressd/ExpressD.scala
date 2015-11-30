@@ -18,13 +18,15 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import expressd.protobuf._
 import spark.SparkMemoryUtilities
 
-import spark.{Accumulable, AccumulableParam}
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.{RDD, SparkContext, SparkEnv}
-import spark.storage._
+import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.AccumulatorParam
+import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, SparkEnv}
+import org.apache.spark.storage._
 
-import spark.SparkContext
-import spark.SparkContext._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
 
 // For debugging.
 import scala.runtime.ScalaRunTime._
@@ -879,6 +881,7 @@ object ExpressD {
           val left = fragment._3
           val right = fragment._4
 
+
           for (i <- 0 until numAlignments) {
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
@@ -893,9 +896,15 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
+
+            val bcTausValue = bcTaus.value(pairTargetId)
+            val bcFldValue = bcFld.value(pairLength)
+            val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
+
             likelihoods.set(i,
-              bcTaus.value(pairTargetId) + bcFld.value(pairLength) - bcEffLengths.value(pairTargetId))
+              bcTausValue + bcFldValue - bcEffLengthsValue
+            )
 
             val targSeq = bcTargSeqs.value(pairTargetId)
             val targLen = bcTargLens.value(pairTargetId)
@@ -920,14 +929,16 @@ object ExpressD {
             }
 
             if (shouldUpdateAllParams) {
-              errorIndices1.add(if (errorIndex1 == null) { errorIndices1.get(0) } else { errorIndex1 })
-              errorIndices2.add(if (errorIndex2 == null) { errorIndices2.get(0) } else { errorIndex2 })
+              errorIndices1.add(if (errorIndex1 == null) { if (errorIndices1.size > 0) { errorIndices1.get(0) } else { errorIndex1 } } else { errorIndex1 })
+              errorIndices2.add(if (errorIndex2 == null) { if (errorIndices2.size > 0) { errorIndices2.get(0) } else { errorIndex2 } } else { errorIndex2 })
             }
 
             // Sum current likelihood with values in errors likelihood table at MAX_READ_LENGTH indices.
             var errLikelihood1 = LOG_1
             if (i > 0 && errorIndex1 == null) {
               errLikelihood1 = refErrLikelihood1
+            } else if ( errorIndex1 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex1.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex1(j))
@@ -940,6 +951,8 @@ object ExpressD {
             var errLikelihood2 = LOG_1
             if (i > 0 && errorIndex2 == null) {
               errLikelihood2 = refErrLikelihood2
+            } else if ( errorIndex2 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex2.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex2(j))
@@ -1020,7 +1033,7 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
 
             // Correct for numerical issues
             val p = likelihoods.get(i) / newTotLikelihood
@@ -1032,13 +1045,17 @@ object ExpressD {
               val errorIndex2 = errorIndices2.get(i)
 
               newFld.localValue(pairLength) += p
-              for (j <- 0 until errorIndex1.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex1(j))
-                newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex1 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex1.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex1(j))
+                  newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
-              for (j <- 0 until errorIndex2.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex2(j))
-                newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex2 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex2.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex2(j))
+                  newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
 
               if (shouldUseBias) {
@@ -1067,7 +1084,13 @@ object ExpressD {
 
       // ===== Debugging =====
       // Print out some memory usage info.
-      var accumFragmentsSize = sc.accumulable(0.0)
+      //var lap = new LongAccumulatorParam()
+      //var accumulatorName = "FragmentsSizeAccumulator"
+      //var accumulatorInit = 0L
+      //LongAccumulatorParam()
+      //var accumFragmentsSize = sc.accumulable(0L, "afs", lap)
+      //var accumFragmentsSize = sc.accumulator(accumulatorInit, accumulatorName, lap)
+      var accumFragmentsSize = sc.accumulable(0L)(org.apache.spark.SparkContext.LongAccumulatorParam)
 
       if (true) {
         processedRDD.mapPartitions{ partition =>
