@@ -46,7 +46,7 @@ object ExpressEnv {
 
   val BIAS_WINDOW = System.getProperty("express.biasWindow", "8").toInt
   val BIAS_MATRIX_SIZE = BIAS_WINDOW * 2 + 1
-  val MAX_FRAG_LENGTH = System.getProperty("express.maxFragLength", "10000").toInt
+  val MAX_FRAG_LENGTH = System.getProperty("express.maxFragLength", "1000000").toInt
   val MAX_READ_LENGTH = System.getProperty("express.maxReadLength", "200").toInt
 
   val BURN_IN_ITERATIONS = System.getProperty("express.burnInIterations", "20").toInt
