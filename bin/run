@@ -156,11 +156,6 @@ else:
     #             just looking for spark/target.
 
     print()
-    #assert os.path.exists(
-    #    "%s/spark/target" % proj_dir), ("You chose to skip Spark prep, but we can't since " +
-    #    "%s/spark/target does not exist, so Spark needs to be rebuilt/packaged." % proj_dir)
-    #print("Skipping preparation tasks for Spark (i.e, git clone or update, checkout, build, " +
-    #    "copy conf files).")
 
 # There is a Spark jar at this point. Build Express-D, if needed.
 spark_work_dir = "%s/spark/work" % proj_dir
