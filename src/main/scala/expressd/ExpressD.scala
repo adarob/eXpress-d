@@ -879,7 +879,6 @@ object ExpressD {
           val left = fragment._3
           val right = fragment._4
 
-
           for (i <- 0 until numAlignments) {
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
