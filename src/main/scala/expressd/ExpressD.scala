@@ -881,12 +881,6 @@ object ExpressD {
 
 
           for (i <- 0 until numAlignments) {
-            //if ( left._1(i) > right._1(i) ) {
-            //  val t = left
-            //  left = right
-            //  right = t
-            //}
-
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
             val leftStart = left._1(i)
@@ -900,10 +894,8 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            //val pairLength = rightStart - leftStart + 1
             val pairLength = Math.abs(rightStart - leftStart) + 1
 
-            //println("pairLength=" + pairLength + " pairTargetId=" + pairTargetId)
             val bcTausValue = bcTaus.value(pairTargetId)
             val bcFldValue = bcFld.value(pairLength)
             val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
@@ -1039,7 +1031,6 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            //val pairLength = rightStart - leftStart + 1
             val pairLength = Math.abs(rightStart - leftStart) + 1
 
             // Correct for numerical issues
