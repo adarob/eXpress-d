@@ -1073,13 +1073,7 @@ object ExpressD {
       val oldTaus = bcTaus.value
 
       // ===== Debugging =====
-      // Print out some memory usage info.
-      //var lap = new LongAccumulatorParam()
-      //var accumulatorName = "FragmentsSizeAccumulator"
-      //var accumulatorInit = 0L
-      //LongAccumulatorParam()
-      //var accumFragmentsSize = sc.accumulable(0L, "afs", lap)
-      //var accumFragmentsSize = sc.accumulator(accumulatorInit, accumulatorName, lap)
+      // Used to print out some memory usage info below
       var accumFragmentsSize = sc.accumulable(0L)(org.apache.spark.SparkContext.LongAccumulatorParam)
 
       if (true) {
