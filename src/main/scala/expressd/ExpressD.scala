@@ -46,7 +46,8 @@ object ExpressD {
   val LOG_1 = math.log(1)
   val INF = 1.0/0.0
 
-  var rand = new Random(42)
+  //uncomment this for identical results between runs
+  //var rand = new Random(42)
 
   // Starts, Lengths, mismatchIndices, mismatchNucs
   type ReadAlignments = (
