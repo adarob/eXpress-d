@@ -21,7 +21,7 @@ import time
 
 # The express-D project directory
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sbt_cmd = "sbt/sbt"
+sbt_cmd = "/usr/bin/sbt"
 
 parser = parser = argparse.ArgumentParser(description='Run Express-D. Before running, '
     'edit the configuration file in express-D/config.')
@@ -49,8 +49,8 @@ os.environ["SPARK_HOME"] = config.SPARK_HOME
 os.environ["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
 
 # Determine what to build based on user-specified variables.
-should_prep_spark = false
-should_prep_express_d = false
+should_prep_spark = False
+should_prep_express_d = False
 
 # Run shell command and ignore output.
 def run_cmd(cmd, exit_on_fail=True):
@@ -116,13 +116,13 @@ slaves_file_raw = open("%s/slaves" % config.SPARK_CONF_DIR, 'r').read().split("\
 slaves_list = filter(lambda x: not x.startswith("#") and not x is "", slaves_file_raw)
 
 # If a cluster is already running from the Spark EC2 scripts, try shutting it down.
-if os.path.exists("%s/bin/stop-all.sh" % config.SPARK_HOME_DIR):
-    run_cmd("%s/bin/stop-all.sh" % config.SPARK_HOME_DIR)
+if os.path.exists("%s/sbin/stop-all.sh" % config.SPARK_HOME):
+    run_cmd("%s/sbin/stop-all.sh" % config.SPARK_HOME)
 
 # If a cluster is already running from an earlier test, try shutting it down.
-if os.path.exists("%s/spark/bin/stop-all.sh" % proj_dir):
+if os.path.exists("%s/spark/sbin/stop-all.sh" % proj_dir):
     print("Stopping Spark standalone cluster...")
-    run_cmd("%s/spark/bin/stop-all.sh" % proj_dir)
+    run_cmd("%s/spark/sbin/stop-all.sh" % proj_dir)
 
 # Ensure all shutdowns have completed (no executors are running).
 ensure_spark_stopped_on_slaves(slaves_list)
@@ -154,11 +154,8 @@ else:
     # TODO(andy): Make this check for the jar we will be including on the
     #             classpath (as part of work Patrick is doing), instead of
     #             just looking for spark/target.
-    assert os.path.exists(
-        "%s/spark/target" % proj_dir), ("You chose to skip Spark prep, but we can't since " +
-        "%s/spark/target does not exist, so Spark needs to be rebuilt/packaged." % proj_dir)
-    print("Skipping preparation tasks for Spark (i.e, git clone or update, checkout, build, " +
-        "copy conf files).")
+
+    print()
 
 # There is a Spark jar at this point. Build Express-D, if needed.
 spark_work_dir = "%s/spark/work" % proj_dir
@@ -173,7 +170,7 @@ if should_prep_express_d:
     run_cmd("cd %s" % proj_dir)
     run_cmd("%s clean assembly" % sbt_cmd)
 else:
-    express_d_jar_path = "%s/target/express-d-assembly.jar" % proj_dir
+    express_d_jar_path = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
     assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
         "source, but %s cannot be found") % express_d_jar_path
 
@@ -191,7 +188,7 @@ new_env["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
 path_to_spark_env_file = "%s/spark-env.sh" % config.SPARK_CONF_DIR
 spark_local_directories = ""
 
-env_file_content = open(path_to_env_file, 'r').read()
+env_file_content = open(path_to_spark_env_file, 'r').read()
 re_result = re.search(r'spark.local.dir=([^"]*)"', env_file_content)
 if re_result:
     spark_local_dirs = re_result.group(1).split(",")
@@ -201,7 +198,7 @@ else:
         "find the following string in spark-env.sh: spark.local.dir=ONE_OR_MORE_DIRNAMES\" so you "
         "will want a line like this: SPARK_JAVA_OPTS+=\" -Dspark.local.dir=/tmp\"")
 
-scala_cmd_classpath = "%s/target/express-d-assembly.jar" % proj_dir
+scala_cmd_classpath = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
 run_express(scala_cmd_classpath)
 
 print("Finished running Express-D")

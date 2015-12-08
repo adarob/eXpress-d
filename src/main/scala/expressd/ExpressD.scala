@@ -18,13 +18,15 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import expressd.protobuf._
 import spark.SparkMemoryUtilities
 
-import spark.{Accumulable, AccumulableParam}
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.{RDD, SparkContext, SparkEnv}
-import spark.storage._
+import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.AccumulatorParam
+import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, SparkEnv}
+import org.apache.spark.storage._
 
-import spark.SparkContext
-import spark.SparkContext._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
 
 // For debugging.
 import scala.runtime.ScalaRunTime._
@@ -893,7 +895,12 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
+
+            val bcTausValue = bcTaus.value(pairTargetId)
+            val bcFldValue = bcFld.value(pairLength)
+            val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
+
             likelihoods.set(i,
               bcTaus.value(pairTargetId) + bcFld.value(pairLength) - bcEffLengths.value(pairTargetId))
 
@@ -1020,7 +1027,7 @@ object ExpressD {
             val misc2R = right._4(i)
             val misc3R = right._5(i)
 
-            val pairLength = rightStart - leftStart + 1
+            val pairLength = Math.abs(rightStart - leftStart) + 1
 
             // Correct for numerical issues
             val p = likelihoods.get(i) / newTotLikelihood
@@ -1066,8 +1073,8 @@ object ExpressD {
       val oldTaus = bcTaus.value
 
       // ===== Debugging =====
-      // Print out some memory usage info.
-      var accumFragmentsSize = sc.accumulable(0.0)
+      // Used to print out some memory usage info below
+      var accumFragmentsSize = sc.accumulable(0L)(org.apache.spark.SparkContext.LongAccumulatorParam)
 
       if (true) {
         processedRDD.mapPartitions{ partition =>

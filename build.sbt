@@ -1,12 +1,8 @@
-import AssemblyKeys._
-
 name := "express-D"
 
 version := "0.1"
 
 organization := "math.mcb.berkeley.edu"
-
-scalaVersion := "2.9.3"
 
 libraryDependencies += "org.clapper" % "argot_2.9.2" % "0.4"
 
@@ -16,14 +12,14 @@ libraryDependencies += "org.scalatest" % "scalatest_2.9.2" % "1.8" % "test"
 
 libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 
+libraryDependencies += "it.unimi.dsi" % "fastutil" % "7.0.8"
+
 unmanagedJars in Compile <++= baseDirectory map { base =>
   val pathToSpark = System.getenv("SPARK_HOME")
   val finder: PathFinder = (file(pathToSpark)) ** "*.jar"
   print ("finder: " + finder)
   finder.get
 }
-
-assemblySettings
 
 test in assembly := {}
 
