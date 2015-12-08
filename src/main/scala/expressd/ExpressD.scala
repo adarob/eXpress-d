@@ -49,7 +49,7 @@ object ExpressD {
   val INF = 1.0/0.0
 
   //uncomment this for identical results between runs
-  //var rand = new Random(42)
+  var rand = new Random()
 
   // Starts, Lengths, mismatchIndices, mismatchNucs
   type ReadAlignments = (
