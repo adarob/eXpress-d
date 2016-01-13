@@ -7,7 +7,7 @@ import scala.collection.mutable.HashMap
 // Import InputFormat classes
 import org.apache.hadoop.mapreduce.lib.input._
 
-import spark.SparkContext
+import org.apache.spark.SparkContext
 
 object ExpressEnv {
 

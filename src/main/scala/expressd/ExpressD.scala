@@ -18,13 +18,15 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import expressd.protobuf._
 import spark.SparkMemoryUtilities
 
-import spark.{Accumulable, AccumulableParam}
-import spark.broadcast.{HttpBroadcast, Broadcast}
-import spark.{RDD, SparkContext, SparkEnv}
-import spark.storage._
+import org.apache.spark.{Accumulable, AccumulableParam}
+import org.apache.spark.AccumulatorParam
+import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, SparkEnv}
+import org.apache.spark.storage._
 
-import spark.SparkContext
-import spark.SparkContext._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
 
 // For debugging.
 import scala.runtime.ScalaRunTime._
@@ -47,6 +49,7 @@ object ExpressD {
   val INF = 1.0/0.0
 
   //set seed for identical results between runs, e.g. Random(42)
+  //uncomment this for identical results between runs
   var rand = new Random()
 
   // Starts, Lengths, mismatchIndices, mismatchNucs
@@ -880,6 +883,7 @@ object ExpressD {
           val left = fragment._3
           val right = fragment._4
 
+
           for (i <- 0 until numAlignments) {
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
@@ -1081,8 +1085,8 @@ object ExpressD {
       val oldTaus = bcTaus.value
 
       // ===== Debugging =====
-      // Print out some memory usage info.
-      var accumFragmentsSize = sc.accumulable(0.0)
+      // Used to print out some memory usage info below
+      var accumFragmentsSize = sc.accumulable(0L)(org.apache.spark.SparkContext.LongAccumulatorParam)
 
       if (true) {
         processedRDD.mapPartitions{ partition =>

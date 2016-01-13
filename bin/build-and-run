@@ -17,7 +17,7 @@ import time
 
 # The express-D project directory
 proj_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sbt_cmd = "sbt/sbt"
+sbt_cmd = "/usr/bin/sbt"
 
 parser = parser = argparse.ArgumentParser(description='Run Express-D. Before running, '
     'edit the configuration file in express-D/config.')
@@ -137,11 +137,16 @@ else:
     # TODO(andy): Make this check for the jar we will be including on the
     #             classpath (as part of work Patrick is doing), instead of
     #             just looking for spark/target.
-    assert os.path.exists(
-        "%s/target" % config.SPARK_HOME), ("You chose to skip Spark prep, but we can't since " +
-        "%s/target does not exist, so Spark needs to be rebuilt/packaged." % config.SPARK_HOME)
-    print("Skipping preparation tasks for Spark (i.e, git clone or update, checkout, build, " +
-        "copy conf files).")
+
+    print()
+<<<<<<< HEAD
+    #assert os.path.exists(
+    #    "%s/target" % config.SPARK_HOME), ("You chose to skip Spark prep, but we can't since " +
+    #    "%s/target does not exist, so Spark needs to be rebuilt/packaged." % config.SPARK_HOME)
+    #print("Skipping preparation tasks for Spark (i.e, git clone or update, checkout, build, " +
+    #    "copy conf files).")
+=======
+>>>>>>> eba4ab889b90eaee9e84e0523a7edf3c6c1f4367
 
 # There is a Spark jar at this point. Build Express-D, if needed.
 spark_work_dir = "%s/spark/work" % proj_dir
@@ -157,7 +162,7 @@ if should_prep_express_d:
     run_cmd("%s clean assembly" % sbt_cmd)
     print("Done assembling Express-D jar.")
 else:
-    express_d_jar_path = "%s/target/express-d-assembly.jar" % proj_dir
+    express_d_jar_path = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
     assert os.path.exists(express_d_jar_path), ("You tried to skip packaging the Express-D " +
         "source, but %s cannot be found") % express_d_jar_path
 
@@ -171,7 +176,7 @@ new_env = os.environ.copy()
 new_env["SPARK_HOME"] = config.SPARK_HOME
 new_env["EXPRESS_D_HOME"] = config.EXPRESS_D_HOME
 
-scala_cmd_classpath = "%s/target/express-d-assembly.jar" % proj_dir
+scala_cmd_classpath = "%s/target/scala-2.10/express-D-assembly.jar" % proj_dir
 
 # Run all tests specified in 'tests_to_run', a list of 5-element tuples. See the 'Test Setup'
 # section in config.py.template for more info.
