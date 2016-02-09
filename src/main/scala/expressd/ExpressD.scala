@@ -48,7 +48,9 @@ object ExpressD {
   val LOG_1 = math.log(1)
   val INF = 1.0/0.0
 
-  var rand = new Random(42)
+  //set seed for identical results between runs, e.g. Random(42)
+  //uncomment this for identical results between runs
+  var rand = new Random()
 
   // Starts, Lengths, mismatchIndices, mismatchNucs
   type ReadAlignments = (
@@ -881,6 +883,7 @@ object ExpressD {
           val left = fragment._3
           val right = fragment._4
 
+
           for (i <- 0 until numAlignments) {
             val pairTargetId = fragment._1(i)
             val leftFirst = fragment._2(i)
@@ -902,7 +905,8 @@ object ExpressD {
             val bcEffLengthsValue = bcEffLengths.value(pairTargetId)
 
             likelihoods.set(i,
-              bcTaus.value(pairTargetId) + bcFld.value(pairLength) - bcEffLengths.value(pairTargetId))
+              bcTausValue + bcFldValue - bcEffLengthsValue
+            )
 
             val targSeq = bcTargSeqs.value(pairTargetId)
             val targLen = bcTargLens.value(pairTargetId)
@@ -927,14 +931,16 @@ object ExpressD {
             }
 
             if (shouldUpdateAllParams) {
-              errorIndices1.add(if (errorIndex1 == null) { errorIndices1.get(0) } else { errorIndex1 })
-              errorIndices2.add(if (errorIndex2 == null) { errorIndices2.get(0) } else { errorIndex2 })
+              errorIndices1.add(if (errorIndex1 == null) { if (errorIndices1.size > 0) { errorIndices1.get(0) } else { errorIndex1 } } else { errorIndex1 })
+              errorIndices2.add(if (errorIndex2 == null) { if (errorIndices2.size > 0) { errorIndices2.get(0) } else { errorIndex2 } } else { errorIndex2 })
             }
 
             // Sum current likelihood with values in errors likelihood table at MAX_READ_LENGTH indices.
             var errLikelihood1 = LOG_1
             if (i > 0 && errorIndex1 == null) {
               errLikelihood1 = refErrLikelihood1
+            } else if ( errorIndex1 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex1.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex1(j))
@@ -947,6 +953,8 @@ object ExpressD {
             var errLikelihood2 = LOG_1
             if (i > 0 && errorIndex2 == null) {
               errLikelihood2 = refErrLikelihood2
+            } else if ( errorIndex2 == null ) {
+              //TODO: what to do here?  was throwing NPE here -aday
             } else {
               for (j <- 0 until errorIndex2.size) {
                 val splitCode = decodeMarkovChainIndex(errorIndex2(j))
@@ -1039,13 +1047,17 @@ object ExpressD {
               val errorIndex2 = errorIndices2.get(i)
 
               newFld.localValue(pairLength) += p
-              for (j <- 0 until errorIndex1.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex1(j))
-                newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex1 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex1.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex1(j))
+                  newErrors1.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
-              for (j <- 0 until errorIndex2.size) {
-                val splitCode = decodeMarkovChainIndex(errorIndex2(j))
-                newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+              if ( errorIndex2 != null ) { //TODO is this right? avert NPE -aday
+                for (j <- 0 until errorIndex2.size) {
+                  val splitCode = decodeMarkovChainIndex(errorIndex2(j))
+                  newErrors2.localValue(j)(splitCode._1)(splitCode._2) += p
+                }
               }
 
               if (shouldUseBias) {
